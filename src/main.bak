@@ -1,0 +1,51 @@
+#include "USART.h"  // For UART Communication 
+#include "pinDefines.h"
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <avr/sleep.h>
+#include <math.h>
+#include <stdint.h>
+#include <util/delay.h>
+
+void initADC(void) {
+  ADMUX |= (0x0F & PC5);
+  ADMUX |= (1 << REFS0); // use high reference output
+  ADCSRA |= (1 << ADPS1) | (1 << ADPS2);
+  ADCSRA |= (1 << ADEN); // enable ADC
+}
+void setupADCSleepmode(void) {
+  set_sleep_mode(SLEEP_MODE_ADC);
+  ADCSRA |= (1 << ADIE);
+  sei();
+}
+EMPTY_INTERRUPT(ADC_vect);
+uint16_t get_adc_reading() {
+  sleep_mode();
+  uint16_t result;
+  for (int i = 5; i > 0; --i) {
+    result += ADC;
+  }
+  return result;
+}
+void convert_to_char(uint16_t value) {}
+int main(void) {
+  initADC();
+  char serialCharacter;
+  // -------- Inits --------- //
+  // LED_DDR = 0xff;
+  initUSART();
+  /* printString("Hello World!\r\n"); */
+  /* printString(get_adc_reading()); */
+  /* set up LEDs for output */
+  /* to test */
+  // ------ Event loop ------ //
+  while (1) {
+    serialCharacter = receiveByte();
+    transmitByte(serialCharacter);
+    /* transmitByte(get_adc_reading()); */
+    // LED_PORT = serialCharacter;
+    /* display ascii/numeric value of character */
+  }
+  return (0);
+  /* End event loop */
+}
